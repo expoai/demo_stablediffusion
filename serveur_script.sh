@@ -58,131 +58,116 @@ fi
 cd stable-diffusion-webui || exit
 
 # SKIP Installations de tout les ajouts (models/extensions/Lora)
-SKIP_EXTENSIONS=false
+SKIP_INSTALL=false
 
 for arg in "$@"; do
   if [[ "$arg" == "--no-install" ]]; then
-    SKIP_EXTENSIONS=true
+    SKIP_INSTALL=true
   fi
 done
 
-if [ "$SKIP_EXTENSIONS" = false ]; then
+if [ "$SKIP_INSTALL" = false ]; then
 
-    # Vérification des modèles
-    echo "[3/7] Vérification des modèles..."
+
+    CONFIG_FILE="/notebooks/install_config.json"
+    EXT_DIR="extensions"
     MODEL_DIR="models/Stable-diffusion"
-    mkdir -p "$MODEL_DIR"
-
-    MODEL_PRUNED="$MODEL_DIR/v1-5-pruned-emaonly.safetensors"
-    if [ ! -f "$MODEL_PRUNED" ]; then
-        wget -O "$MODEL_PRUNED" "https://huggingface.co/runwayml/stable-diffusion-v1-5/resolve/main/v1-5-pruned-emaonly.safetensors"
-    else
-        echo "Modèle v1-5-pruned-emaonly déjà présent."
-    fi
-
-    MODEL_BNB="$MODEL_DIR/isometric-skeumorphic-3d-bnb.safetensors"
-    if [ ! -f "$MODEL_BNB" ]; then
-        wget -O "$MODEL_BNB" "https://huggingface.co/multimodalart/isometric-skeumorphic-3d-bnb/resolve/main/isometric-skeumorphic-3d-bnb.safetensors"
-    else
-        echo "Modèle Isometric Skeumorphic déjà présent."
-    fi
-
-    MODEL_SDXL="$MODEL_DIR/sd_xl_base_1.0.safetensors"
-    if [ ! -f "$MODEL_SDXL" ]; then
-        wget -O "$MODEL_SDXL" "https://huggingface.co/stabilityai/stable-diffusion-xl-base-1.0/resolve/main/sd_xl_base_1.0.safetensors"
-    else
-        echo "Modèle Stable Diffusion XL base déjà présent."
-    fi
-
-    MODEL_SDXL_REFINER="$MODEL_DIR/sd_xl_refiner_1.0.safetensors"
-    if [ ! -f "$MODEL_SDXL_REFINER" ]; then
-        wget -O "$MODEL_SDXL_REFINER" "https://huggingface.co/stabilityai/stable-diffusion-xl-refiner-1.0/resolve/main/sd_xl_refiner_1.0.safetensors"
-    else
-        echo "Modèle Stable Diffusion XL base refiner déjà présent."
-    fi
-
-    MODEL_NOVA="$MODEL_DIR/novaCartoonXL_v10.safetensors"
-    if [ ! -f "$MODEL_NOVA" ]; then
-        wget -O "$MODEL_NOVA" "https://civitai.green/api/download/models/1777060?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-    else
-        echo "Modèle Nova Cartoon v10 déjà présent."
-    fi
-
+    LORA_DIR="models/Lora"
     VAE_DIR="models/VAE"
 
-    VAE_SDXL_VAE="$VAE_DIR/sdxl_vae.safetensors"
-    if [ ! -f "$VAE_SDXL_VAE" ]; then
-        wget -O "$VAE_SDXL_VAE" "https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors"
-    else
-        echo "Modèle Nova Cartoon v10 déjà présent."
+    # Vérifie que jq est installé
+    if ! command -v jq &>/dev/null; then
+      sudo apt install -y jq
     fi
 
-    # Exemple de gestion de flag dans ton script
-    SKIP_EXTENSIONS=false
+    # Crée les dossiers si besoin
+    mkdir -p "$EXT_DIR" "$MODEL_DIR" "$LORA_DIR" "$VAE_DIR"
+    
+    # Récupération des tokens
+    if jq -e '.auth.huggingface.enabled==true' "$CONFIG_FILE" > /dev/null; then
+        HF_TOKEN=$(jq -r '.auth.huggingface.token' "$CONFIG_FILE")
+    fi
+    if jq -e '.auth.civitai.enabled==true' "$CONFIG_FILE" > /dev/null; then
+        CA_TOKEN=$(jq -r '.auth.civitai.token' "$CONFIG_FILE")
+    fi
 
-    for arg in "$@"; do
-      if [[ "$arg" == "--no-extensions" ]]; then
-        SKIP_EXTENSIONS=true
+    curl_exit_code=$?
+
+    echo "[MODELS]"
+    jq -r '.models | to_entries[] | select(.value.enabled == true) | "\(.key) \(.value.url)"' "$CONFIG_FILE" | while read -r name url; do
+      FILE="$MODEL_DIR/$name.safetensors"
+      if [ ! -f "$FILE" ]; then
+        echo "Téléchargement du modèle : $name"
+        if [[ "$url" == https://huggingface.co/* ]]; then
+          wget --header="Authorization: Bearer $HF_TOKEN" -O "$FILE" "$url"
+        elif [[ "$url" == https://civitai.* ]]; then
+          MODEL_ID=$(echo "$url" | grep -oP '/models/\K[0-9]+')
+          URL=$(curl -s -H "Authorization: Bearer $CA_TOKEN" "https://civitai.com/api/v1/model-versions/$MODEL_ID" | jq -r '.files[] | select(.type=="Model") | .downloadUrl')
+          curl_output=$(curl -sS --fail -o "$FILE" "$URL" 2>&1)
+          curl -L -H "Authorization: Bearer $CA_TOKEN" -o "$FILE" "$URL"
+          if [[ $curl_exit_code -eq 3 || "$curl_output" == *"URL using bad/illegal format or missing URL"* ]]; then
+            curl -L -H "Authorization: Bearer $CA_TOKEN" -o "$FILE" "$url"
+          fi
+        else
+          echo "Le model n'a pas été trouvé"
+        fi
+      else
+        echo "Modèle $name déjà présent."
+      fi
+    done
+
+    echo "[EXTENSIONS + MODELS LIÉS]"
+    jq -c '.extensions | to_entries[] | select(.value.enabled == true)' "$CONFIG_FILE" | while read -r entry; do
+      NAME=$(echo "$entry" | jq -r '.key')
+      URL=$(echo "$entry" | jq -r '.value.url')
+      DIR="$EXT_DIR/$NAME"
+
+      if [ ! -d "$DIR" ]; then
+        echo "Clonage extension : $NAME"
+        git clone "$URL" "$DIR"
+      else
+        echo "Extension $NAME déjà installée."
+      fi
+
+      # Téléchargement des modèles liés à l'extension
+      echo "$entry" | jq -c '.value.models // {} | to_entries[] | select(.value.enabled == true)' | while read -r model_entry; do
+        MODEL_NAME=$(echo "$model_entry" | jq -r '.key')
+        MODEL_URL=$(echo "$model_entry" | jq -r '.value.url')
+        MODEL_FORMAT=$(echo "$model_entry" | jq -r '.value.url' | awk -F. '{print $NF}')
+        MODEL_PATH="$DIR/models/$MODEL_NAME.$MODEL_FORMAT"
+
+        mkdir -p "$DIR/models"
+        if [ ! -f "$MODEL_PATH" ]; then
+          echo "Téléchargement modèle lié : $MODEL_NAME pour $NAME"
+          wget -O "$MODEL_PATH" "$MODEL_URL"
+        else
+          echo "Modèle lié $MODEL_NAME déjà présent pour $NAME"
+        fi
+      done
+    done
+
+    echo "[LORAS]"
+    jq -r '.lora | to_entries[] | select(.value.enabled == true) | "\(.key) \(.value.url)"' "$CONFIG_FILE" | while read -r name url; do
+      FILE="$LORA_DIR/$name.safetensors"
+      if [ ! -f "$FILE" ]; then
+        echo "Téléchargement du LoRA : $name"
+        wget -O "$FILE" "$url"
+      else
+        echo "LoRA $name déjà présent."
       fi
     done
     
-    cd "$PROJECT_DIR/stable-diffusion-webui" || exit
-    EXT_DIR="extensions"
-    CONTROLNET_DIR="$EXT_DIR/sd-webui-controlnet"
-        
-    echo "[4/7] Installation des extensions..."
-    if [ "$SKIP_EXTENSIONS" = false ]; then
-      echo "Installation des extensions..."
+    echo "[VAE]"
+    jq -r '.VAE | to_entries[] | select(.value.enabled == true) | "\(.key) \(.value.url)"' "$CONFIG_FILE" | while read -r name url; do
+      FILE="$VAE_DIR/$name.safetensors"
+      if [ ! -f "$FILE" ]; then
+        echo "Téléchargement du VAE : $name"
+        wget -O "$FILE" "$url"
+      else
+        echo "VAE $name déjà présent."
+      fi
+    done
 
-        # [4/7] Installation de l'extension sd-webui-controlnet
-        echo "Installation de l'extension sd-webui-controlnet..."
-
-        if [ ! -d "$CONTROLNET_DIR" ]; then
-            echo "Clonage de sd-webui-controlnet..."
-            git clone https://github.com/Mikubill/sd-webui-controlnet "$CONTROLNET_DIR"
-        else
-            echo "Extension sd-webui-controlnet déjà installée."
-        fi
-
-        # Téléchargement automatique du modèle controlnet-canny-sdxl-1.0
-        echo "Installation du modèle ControlNet : controlnet-canny-sdxl-1.0..."
-
-        CONTROLNET_MODEL_DIR="$CONTROLNET_DIR/models"
-        mkdir -p "$CONTROLNET_MODEL_DIR"
-
-        MODEL_NAME="controlnet-canny-sdxl-1.0.safetensors"
-        MODEL_PATH="$CONTROLNET_MODEL_DIR/$MODEL_NAME"
-
-        if [ ! -f "$MODEL_PATH" ]; then
-            echo "Téléchargement de $MODEL_NAME..."
-            wget -O "$MODEL_PATH" "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/models/$MODEL_NAME"
-        else
-            echo "Modèle $MODEL_NAME déjà présent."
-        fi
-
-    else
-        echo "Extensions désactivées (flag --no-extensions)"
-        
-        if [ -d "$EXT_DIR" ]; then
-            echo "Suppression du contenu du dossier extensions..."
-            rm -rf "$EXT_DIR"/* 
-        fi
-    fi
-
-
-    # Installation des loRA 
-    echo "[5/8] Vérification des LoRA..."
-
-
-    LORA_DIR="models/Lora"
-    mkdir -p "$LORA_DIR"
-    LORA_FILE="$LORA_DIR/isometric-skeumorphic-3d-bnb.safetensors"
-    if [ ! -f "$LORA_FILE" ]; then
-      wget -O "$LORA_FILE" \
-        "https://huggingface.co/multimodalart/isometric-skeumorphic-3d-bnb/resolve/main/isometric-skeumorphic-3d-bnb.safetensors"
-    else
-      echo "LoRA isometric-skeumorphic déjà présent."
-    fi
     
 else
       echo "Installations désactivées (flag --no-install)"
@@ -192,16 +177,18 @@ fi
 echo "[5/7] Création et activation de l'environnement virtuel Python..."
 if [ ! -d "../venv" ]; then
     $PYTHON -m venv ../venv
+    
+    source ../venv/bin/activate
+    
+    # Mise à jour pip/setuptools/wheel dans le venv
+    pip install --upgrade pip setuptools wheel
+
+    # Installation des dépendances Python spécifiques au projet
+    if [ -f "requirements.txt" ]; then
+        pip install -r requirements.txt
+    fi
 fi
 source ../venv/bin/activate
-
-# Mise à jour pip/setuptools/wheel dans le venv
-pip install --upgrade pip setuptools wheel
-
-# Installation des dépendances Python spécifiques au projet
-if [ -f "requirements.txt" ]; then
-    pip install -r requirements.txt
-fi
 
 # Installation des pilotes NVIDIA + CUDA pour PyTorch GPU
 echo "[5.5/7] Installation des pilotes NVIDIA et CUDA..."
@@ -217,6 +204,28 @@ if lspci | grep -i nvidia > /dev/null; then
 
 else
     echo "Aucun GPU NVIDIA détecté. Passage en mode CPU."
+fi
+
+# Vérifie si CUDA Toolkit 12.9 est déjà installé
+if ! nvcc --version 2>/dev/null | grep -q "release 12.9"; then
+  echo "Installation de CUDA Toolkit 12.9..."
+  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+  sudo dpkg -i cuda-keyring_1.1-1_all.deb
+  sudo apt-get update
+  sudo apt-get -y install cuda-toolkit-12-9
+else
+  echo "CUDA Toolkit 12.9 déjà installé."
+fi
+
+# Vérifie si cuDNN est déjà installé
+if ! dpkg -l | grep -q "cudnn"; then
+  echo "Installation de cuDNN..."
+  wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
+  sudo dpkg -i cuda-keyring_1.1-1_all.deb
+  sudo apt-get update
+  sudo apt-get -y install cudnn
+else
+  echo "cuDNN déjà installé."
 fi
 
 # Installation de PyTorch avec CUDA 12.1 + xFormers compatible
@@ -241,10 +250,21 @@ else
 
     echo "Installation de xFormers stable compatible avec CUDA 12.1..."
     pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
+    
+    pip install insightface
 fi
 
 
 # Lancement de Stable Diffusion WebUI avec options CPU / mémoire réduite
 echo "[7/7] Lancement de Stable Diffusion WebUI..."
-export COMMANDLINE_ARGS="--share --listen --port 7860 --api --enable-insecure-extension-access --xformers --no-half-vae --medvram"
-python launch.py
+export COMMANDLINE_ARGS="--share --listen --api --enable-insecure-extension-access --xformers --no-half-vae --medvram"
+    
+while true; do
+    echo ">> Lancement de la WebUI..."
+    
+    # Lancement avec les arguments passés au script (ex: --listen --xformers etc.)
+    python launch.py
+
+    echo "!!! La WebUI s'est arrêtée. Redémarrage dans 3 secondes..."
+    sleep 3
+done

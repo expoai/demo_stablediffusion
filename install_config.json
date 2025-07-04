@@ -1,0 +1,66 @@
+{
+  "auth": {
+    "huggingface": {
+      "enabled": false,
+      "token": ""
+    },
+    "civitai": {
+      "enabled": false,
+      "token": ""
+    }
+  },
+  "models": {
+    "flat2Dmerge_sd15_fp16_checkpoint": {
+      "enabled": true,
+      "url": "https://civitai.green/api/download/models/266360?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+    },
+    "real-dream_sd15_fp16_checkpoint": {
+      "enabled": true,
+      "url": "https://civitai.green/api/download/models/712448?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+    },
+    "ghostxl_v10BakedVAE" : {
+      "enabled": true,
+      "url" : "https://civitai.com/api/download/models/350624?type=Model&format=SafeTensor&size=full&fp=fp16"
+    }
+  },
+  "extensions": {
+    "sd-webui-controlnet": {
+      "enabled": true,
+      "url": "https://github.com/Mikubill/sd-webui-controlnet",
+      "models": {
+        "ip-adapter-faceid-plusv2_sd15": {
+          "enabled": true,
+          "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15.bin"
+        },
+        "control_v11p_sd15_lineart": {
+          "enabled": true,
+          "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_lineart.pth"
+        },
+        "control_v11p_sd15_openpose": {
+          "enabled": true,
+          "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_openpose.pth"
+        }
+      }
+    },
+    "sd-webui-ip-adapter": {
+      "enabled": false,
+      "url": "https://github.com/tencent-ailab/IP-Adapter.git"
+    }
+  },
+  "lora": {
+    "faceid-plusv2_sd15_lora": {
+      "enabled": true,
+      "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15_lora.safetensors"
+    },
+    "baroque-fantasy_sd15_lora": {
+      "enabled": true,
+      "url": "https://civitai.green/api/download/models/1816057?type=Model&format=SafeTensor"
+    }
+  },
+  "VAE": {
+    "anime2_VAE": {
+      "enabled" : false,
+      "url" : "https://civitai.green/api/download/models/28569?type=Model&format=SafeTensor"
+    }
+  }
+}

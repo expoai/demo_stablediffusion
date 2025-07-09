@@ -3,7 +3,7 @@ set -e
 
 # CONFIGURATION
 REPO_URL="https://github.com/comfyanonymous/ComfyUI.git"
-DIR_NAME="StableDiffusionServer"
+DIR_NAME="/home/ubuntu/StableDiffusionServer"
 PORT=8080
 VENV_DIR="venv"
 CONFIG_FILE="/home/ubuntu/demo_stablediffusion/install_config.json"  # JSON à placer dans le dossier parent

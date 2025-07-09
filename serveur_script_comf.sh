@@ -8,6 +8,8 @@ PORT=8080
 VENV_DIR="venv"
 CONFIG_FILE="/home/ubuntu/demo_stablediffusion/install_config.json"  # JSON à placer dans le dossier parent
 
+sudo apt update
+
 # Fonction pour installer avec correction automatique des paquets cassés
 safe_apt_install() {
   local packages="$*"
@@ -19,16 +21,27 @@ safe_apt_install() {
   fi
 }
 
-# Vérification et installation de Python 3.12 et python3.12-venv si manquants
-if ! command -v python3.12 &> /dev/null; then
-  echo "Installation de Python 3.12 et python3.12-venv..."
-  sudo apt update
-  sudo apt install -y python3.12
+if ! command -v python3.10 &> /dev/null || [[ $(python3.10 --version) != *"3.10.6"* ]]; then
+    echo "Python 3.10.6 non détecté. Installation en cours..."
+    cd /tmp
+    wget https://www.python.org/ftp/python/3.10.6/Python-3.10.6.tgz
+    tar -xf Python-3.10.6.tgz
+    cd Python-3.10.6
+    ./configure --enable-optimizations
+    make -j$(nproc)
+    sudo make altinstall
+    cd ~
+    echo "Python 3.10.6 installé."
 else
-  echo "Python 3.12 déjà installé."
+    echo "Python 3.10.6 déjà installé."
 fi
 
-sudo apt install -y python3.12-venv
+# Installer pip pour python3.10 si nécessaire
+if ! python3.10 -m pip --version &> /dev/null; then
+    echo "Installation de pip pour Python 3.10..."
+    wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
+    python3.10 /tmp/get-pip.py
+fi
 
 # Création du dossier principal
 mkdir -p "$DIR_NAME"

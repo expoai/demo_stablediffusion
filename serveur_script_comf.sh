@@ -8,14 +8,27 @@ PORT=8080
 VENV_DIR="venv"
 CONFIG_FILE="/home/ubuntu/install_config.json"  # JSON à placer dans le dossier parent
 
+# Fonction pour installer avec correction automatique des paquets cassés
+safe_apt_install() {
+  local packages="$*"
+  if ! sudo apt install -y $packages; then
+    echo "Échec de l'installation de $packages. Tentative de réparation avec --fix-broken..."
+    sudo apt --fix-broken install -y
+    echo "Nouvelle tentative d'installation de $packages..."
+    sudo apt install -y $packages
+  fi
+}
+
 # Vérification et installation de Python 3.12 et python3.12-venv si manquants
 if ! command -v python3.12 &> /dev/null; then
   echo "Installation de Python 3.12 et python3.12-venv..."
   sudo apt update
-  sudo apt install -y python3.12 python3.12-venv
+  sudo apt install -y python3.12
 else
   echo "Python 3.12 déjà installé."
 fi
+
+sudo apt install -y python3.12-venv
 
 # Création du dossier principal
 mkdir -p "$DIR_NAME"
@@ -119,22 +132,37 @@ else
   source "$VENV_DIR/bin/activate"
 fi
 
-# Vérification de PyTorch
-echo "Vérification de l'installation de PyTorch..."
-if ! python3 -c "import torch" &> /dev/null; then
-  echo "PyTorch non détecté, installation en cours..."
+# Installation des pilotes NVIDIA + CUDA pour PyTorch GPU
 
-  # Vérifie la présence de GPU NVIDIA (CUDA)
-  if command -v nvidia-smi &> /dev/null; then
-    echo "NVIDIA GPU détecté, installation de PyTorch avec support CUDA..."
-    pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-  else
-    echo "Pas de GPU NVIDIA détecté, installation de PyTorch CPU-only..."
-    pip install torch torchvision torchaudio
-  fi
+#sudo apt install -y pciutils
 
+# Vérifie si le GPU NVIDIA est détecté
+if lspci | grep -i nvidia > /dev/null; then
+    echo "GPU NVIDIA détecté. Installation des pilotes..."
+    # Installation du driver NVIDIA recommandé
+    safe_apt_install -y nvidia-driver-535
+    echo "Redémarrage recommandé après installation du pilote NVIDIA."
 else
-  echo "PyTorch est déjà installé."
+    echo "Aucun GPU NVIDIA détecté. Passage en mode CPU."
+fi
+
+# Vérification de la version actuelle de PyTorch
+PYTORCH_VERSION=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "not_installed")
+if [[ "$PYTORCH_VERSION" == "2.1.2+cu121" ]]; then
+    echo " PyTorch 2.1.2 est déjà installé. Aucune action nécessaire."
+else
+    echo " PyTorch $PYTORCH_VERSION détecté. Installation de PyTorch 2.1.2 avec CUDA 12.1..."
+
+    echo "Nettoyage des versions précédentes de torch, torchvision, torchaudio, xformers..."
+    pip uninstall -y torch torchvision torchaudio xformers
+
+    echo "Installation de PyTorch 2.1.2 avec support CUDA 12.1..."
+    pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121
+
+    echo "Installation de xFormers stable compatible avec CUDA 12.1..."
+    pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
+    
+    pip install insightface
 fi
 
 # Lancement ComfyUI

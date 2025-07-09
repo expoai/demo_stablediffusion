@@ -1,13 +1,15 @@
+effectue le même travail pour ce document là : serveur_script.sh 
+
 #!/bin/bash
 
-echo "[0/7] Mise à jour et installation des outils de base..."
+echo "[0/9] Mise à jour et installation des outils de base..."
 sudo apt update
 sudo apt install -y wget git build-essential libssl-dev zlib1g-dev \
     libncurses5-dev libncursesw5-dev libreadline-dev libsqlite3-dev \
     libgdbm-dev libdb5.3-dev libbz2-dev libexpat1-dev liblzma-dev tk-dev libffi-dev unzip libgl1 libglib2.0-0
 
 #Vérification Python 3.10.6
-echo "[1/7] Vérification de Python 3.10.6..."
+echo "[1/9] Vérification de Python 3.10.6..."
 if ! command -v python3.10 &> /dev/null || [[ $(python3.10 --version) != *"3.10.6"* ]]; then
     echo "Python 3.10.6 non détecté. Installation en cours..."
     cd /tmp
@@ -33,7 +35,7 @@ fi
 PYTHON=python3.10
 
 # Cloner le dépôt stable-diffusion-webui
-echo "[2/7] Vérification du dépôt stable-diffusion-webui..."
+echo "[2/9] Vérification du dépôt stable-diffusion-webui..."
 REDIRECT="/root"
 PROJECT_DIR=$REDIRECT/StableDiffusionServer
 
@@ -58,6 +60,8 @@ fi
 cd stable-diffusion-webui || exit
 
 # SKIP Installations de tout les ajouts (models/extensions/Lora)
+echo "[3/9] Installation des dépendances..."
+
 SKIP_INSTALL=false
 
 for arg in "$@"; do
@@ -83,14 +87,9 @@ if [ "$SKIP_INSTALL" = false ]; then
     # Crée les dossiers si besoin
     mkdir -p "$EXT_DIR" "$MODEL_DIR" "$LORA_DIR" "$VAE_DIR"
     
-    # Récupération des tokens
-    if jq -e '.auth.huggingface.enabled==true' "$CONFIG_FILE" > /dev/null; then
-        HF_TOKEN=$(jq -r '.auth.huggingface.token' "$CONFIG_FILE")
-    fi
-    if jq -e '.auth.civitai.enabled==true' "$CONFIG_FILE" > /dev/null; then
-        CA_TOKEN=$(jq -r '.auth.civitai.token' "$CONFIG_FILE")
-    fi
-
+    HF_TOKEN=$(jq -r '.auth.huggingface.token' "$CONFIG_FILE")
+    CA_TOKEN=$(jq -r '.auth.civitai.token' "$CONFIG_FILE")
+    
     curl_exit_code=$?
 
     echo "[MODELS]"
@@ -174,7 +173,7 @@ else
 fi
 
 # Création et activation de l'environnement virtuel
-echo "[5/7] Création et activation de l'environnement virtuel Python..."
+echo "[4/9] Création et activation de l'environnement virtuel Python..."
 if [ ! -d "../venv" ]; then
     $PYTHON -m venv ../venv
     
@@ -191,7 +190,9 @@ fi
 source ../venv/bin/activate
 
 # Installation des pilotes NVIDIA + CUDA pour PyTorch GPU
-echo "[5.5/7] Installation des pilotes NVIDIA et CUDA..."
+echo "[5/9] Installation des pilotes NVIDIA et CUDA..."
+
+#sudo apt install -y pciutils
 
 # Vérifie si le GPU NVIDIA est détecté
 if lspci | grep -i nvidia > /dev/null; then
@@ -207,6 +208,7 @@ else
 fi
 
 # Vérifie si CUDA Toolkit 12.9 est déjà installé
+echo "[6/9] Installation de CUDA Toolkit 12.9..."
 if ! nvcc --version 2>/dev/null | grep -q "release 12.9"; then
   echo "Installation de CUDA Toolkit 12.9..."
   wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
@@ -218,6 +220,7 @@ else
 fi
 
 # Vérifie si cuDNN est déjà installé
+echo "[7/9] Installation de cuDNN..."
 if ! dpkg -l | grep -q "cudnn"; then
   echo "Installation de cuDNN..."
   wget https://developer.download.nvidia.com/compute/cuda/repos/ubuntu2204/x86_64/cuda-keyring_1.1-1_all.deb
@@ -229,7 +232,7 @@ else
 fi
 
 # Installation de PyTorch avec CUDA 12.1 + xFormers compatible
-echo "[6/7] Installation de PyTorch et xFormers compatibles GPU..."
+echo "[8/9] Installation de PyTorch et xFormers compatibles GPU..."
 
 # Mise à jour de pip
 pip install --upgrade pip
@@ -256,7 +259,7 @@ fi
 
 
 # Lancement de Stable Diffusion WebUI avec options CPU / mémoire réduite
-echo "[7/7] Lancement de Stable Diffusion WebUI..."
+echo "[9/9] Lancement de Stable Diffusion WebUI..."
 export COMMANDLINE_ARGS="--share --listen --api --enable-insecure-extension-access --xformers --no-half-vae --medvram"
     
 while true; do

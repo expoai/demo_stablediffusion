@@ -6,7 +6,7 @@ REPO_URL="https://github.com/comfyanonymous/ComfyUI.git"
 DIR_NAME="StableDiffusionServer"
 PORT=8080
 VENV_DIR="venv"
-CONFIG_FILE="/home/ubuntu/install_config.json"  # JSON à placer dans le dossier parent
+CONFIG_FILE="/home/ubuntu/demo_stablediffusion/install_config.json"  # JSON à placer dans le dossier parent
 
 # Fonction pour installer avec correction automatique des paquets cassés
 safe_apt_install() {

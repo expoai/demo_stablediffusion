@@ -46,6 +46,9 @@ if ! python3.10 -m pip --version &> /dev/null; then
     echo "Installation de pip pour Python 3.10..."
     wget https://bootstrap.pypa.io/get-pip.py -O /tmp/get-pip.py
     python3.10 /tmp/get-pip.py
+else
+    echo "mise à jour de pip"
+    pip3.10 install --upgrade pip
 fi
 
 # Création du dossier principal
@@ -144,12 +147,13 @@ if [ ! -d "$VENV_DIR" ]; then
   python3.10 -m venv "$VENV_DIR"
   source "$VENV_DIR/bin/activate"
   pip install --upgrade pip
-  pip install numpy==1.26.4
   pip install -r requirements.txt
 else
   echo "venv déjà présent, activation..."
   source "$VENV_DIR/bin/activate"
 fi
+
+pip install "numpy<2.0" --force-reinstall --no-cache-dir
 
 # Installation des pilotes NVIDIA + CUDA pour PyTorch GPU
 
@@ -173,25 +177,31 @@ fi
 # Détection de la version de PyTorch actuellement installée
 PYTORCH_VERSION=$(python3 -c "import torch; print(torch.__version__)" 2>/dev/null || echo "not_installed")
 
-# Cible : PyTorch 2.1.2 avec CUDA 12.1
-if [[ "$PYTORCH_VERSION" == "2.1.2+cu121" ]]; then
-    echo "PyTorch 2.1.2 avec CUDA 12.1 est déjà installé. Aucune action nécessaire."
-else
-    echo "PyTorch $PYTORCH_VERSION détecté. Nettoyage et installation de PyTorch 2.1.2 avec CUDA 12.1..."
-    echo "Suppression des anciennes versions de torch, torchvision, torchaudio, xformers..."
-    pip uninstall -y torch torchvision torchaudio xformers
-    echo "Installation de PyTorch 2.1.2 avec support CUDA 12.1..."
-    pip install torch==2.1.2 torchvision==0.16.2 torchaudio==2.1.2 --index-url https://download.pytorch.org/whl/cu121
-    if [[ $? -ne 0 ]]; then
-        echo "Échec de l'installation de PyTorch avec CUDA. Abandon."
-        exit 1
-    fi
-    echo "Installation de xFormers compatible CUDA 12.1..."
-    pip install xformers==0.0.23.post1 --index-url https://download.pytorch.org/whl/cu121
-    echo "Installation d'InsightFace (non lié à CUDA mais nécessaire pour certains workflows)..."
-    pip install insightface
-    echo "PyTorch avec CUDA 12.1 installé avec succès."
+# Détection de la version de PyTorch actuellement installée
+PYTORCH_VERSION=$(python3 -c "import torch; print(torch.__version__)")
+
+echo "PyTorch détecté : $PYTORCH_VERSION"
+
+# Nettoyage si une ancienne version de xformers est présente
+echo "Suppression de xformers (pour réinstallation propre)..."
+pip uninstall -y xformers
+
+# Réinstallation de xformers compatible avec torch actuel
+echo "Installation de xformers compatible avec torch $PYTORCH_VERSION..."
+pip install xformers --no-cache-dir
+
+# Vérification de succès
+if [[ $? -ne 0 ]]; then
+    echo "Échec de l'installation de xformers. Veuillez vérifier les logs ci-dessus."
+    exit 1
 fi
+
+# Installation de insightface (utile dans ComfyUI pour certaines nodes)
+echo "Installation d'InsightFace..."
+pip install insightface
+
+echo "xformers et insightface installés avec succès pour torch $PYTORCH_VERSION"
+
 
 # Lancement ComfyUI
 echo "Lancement de ComfyUI..."

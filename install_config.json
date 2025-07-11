@@ -1,7 +1,7 @@
 {
   "auth": {
     "huggingface": {
-      "enabled": false,
+      "enabled": true,
       "token": ""
     },
     "civitai": {
@@ -18,21 +18,40 @@
       "enabled": true,
       "url": "https://civitai.green/api/download/models/712448?type=Model&format=SafeTensor&size=pruned&fp=fp16"
     },
-    "ghostxl_v10BakedVAE" : {
+    "flux1-dev-fp8" : {
       "enabled": false,
-      "url" : "https://civitai.com/api/download/models/350624?type=Model&format=SafeTensor&size=full&fp=fp16"
+      "url" : "https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors?"
     }
   },
   "extensions": {
-    "sd-webui-ip-adapter": {
-      "enabled": false,
-      "url": "https://github.com/tencent-ailab/IP-Adapter.git"
+    "ComfyUI_IPAdapter_plus": {
+      "enabled": true,
+      "url": "https://github.com/cubiq/ComfyUI_IPAdapter_plus.git",
+      "models": {
+        "ip-adapter-faceid-plusv2_sd15": {
+            "enabled": true,
+            "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15.bin"
+        }
+      }
+    },
+    "comfyui_controlnet_aux": {
+      "enabled": true,
+      "url": "https://github.com/Fannovel16/comfyui_controlnet_aux.git"
+    },
+    "ComfyUI-Manager": {
+      "enabled": true,
+      "url": "https://github.com/Comfy-Org/ComfyUI-Manager.git"
     }
   },
+},
   "lora": {
     "expressive": {
       "enabled": true,
       "url": "https://huggingface.co/gokaygokay/Flux-Expressive-LoRA/resolve/main/expressive.safetensors"
+    },
+    "isometric-skeumorphic-3d-bnb": {
+      "enabled": true,
+      "url": "https://huggingface.co/multimodalart/isometric-skeumorphic-3d-bnb/resolve/main/isometric-skeumorphic-3d-bnb.safetensors"
     }
   },
   "VAE": {
@@ -53,7 +72,7 @@
   },
   "difmodel": {
     "flux1-kontext-dev": {
-      "enabled" : true,
+      "enabled" : false,
       "url" : "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/resolve/main/flux1-kontext-dev.safetensors"
     }
   }

@@ -1,7 +1,7 @@
 {
   "auth": {
     "huggingface": {
-      "enabled": true,
+      "enabled": false,
       "token": ""
     },
     "civitai": {
@@ -10,8 +10,8 @@
     }
   },
   "models": {
-    "flat2Dmerge_sd15_fp16_checkpoint": {
-      "enabled": false,
+    "Flat2DMerge_fp16": {
+      "enabled": true,
       "url": "https://civitai.green/api/download/models/266360?type=Model&format=SafeTensor&size=pruned&fp=fp16"
     },
     "real-dream_sd15_fp16_checkpoint": {
@@ -36,14 +36,19 @@
     },
     "comfyui_controlnet_aux": {
       "enabled": true,
-      "url": "https://github.com/Fannovel16/comfyui_controlnet_aux.git"
+      "url": "https://github.com/Fannovel16/comfyui_controlnet_aux.git",
+      "models": {
+        "control_v11p_sd15_lineart": {
+            "enabled": true,
+            "url": "https://huggingface.co/lllyasviel/ControlNet-v1-1/resolve/main/control_v11p_sd15_lineart.pth"
+        }
+      }
     },
     "ComfyUI-Manager": {
       "enabled": true,
       "url": "https://github.com/Comfy-Org/ComfyUI-Manager.git"
     }
   },
-},
   "lora": {
     "expressive": {
       "enabled": true,
@@ -52,12 +57,20 @@
     "isometric-skeumorphic-3d-bnb": {
       "enabled": true,
       "url": "https://huggingface.co/multimodalart/isometric-skeumorphic-3d-bnb/resolve/main/isometric-skeumorphic-3d-bnb.safetensors"
+    },
+    "ip-adapter-faceid-plusv2_sd15_lora": {
+      "enabled": true,
+      "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15_lora.safetensors"
     }
   },
   "VAE": {
     "ae": {
       "enabled" : false,
       "url" : "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors"
+    },
+    "model_28569": {
+      "enabled" : true,
+      "url" : "https://civitai.green/api/download/models/28569?type=Model&format=SafeTensor"
     }
   },
   "textencoder": {
@@ -74,6 +87,12 @@
     "flux1-kontext-dev": {
       "enabled" : false,
       "url" : "https://huggingface.co/black-forest-labs/FLUX.1-Kontext-dev/resolve/main/flux1-kontext-dev.safetensors"
+    }
+  },
+  "clpvision": {
+    "vit-h": {
+      "enabled": true,
+      "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors"
     }
   }
 }

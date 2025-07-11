@@ -122,6 +122,9 @@ while IFS=$'\t' read -r name url; do
   if [ ! -d "$EXT_DIR" ]; then
     echo "Clonage de l'extension $name"
     git clone "$url" "$EXT_DIR"
+    if [[ -d "$EXT_DIR/$name/requirement.txt" ]]; then
+      pip install -r requirement.txt
+    fi
   else
     echo "Extension $name déjà présente"
  fi
@@ -130,7 +133,14 @@ while IFS=$'\t' read -r name url; do
   jq -r --arg name "$name" '.extensions[$name].models // {} | to_entries[] | select(.value.enabled == true) | [.key, .value.url] | @tsv' "$CONFIG_FILE" | \
   while IFS=$'\t' read -r subname suburl; do
     filename=$(basename "$suburl")
-    dest="models/controlnet/$filename"
+    if [[ "$name"="=ComfyUI_IPAdapter_plus" ]]; then
+        extension=ipadapter
+    else
+        extension=controlnet
+    fi
+    mkdir -p "models/$extension"
+    echo "models/$extension"
+    dest="models/$extension/$filename"
     if [[ -f "$dest" ]]; then
       echo "$subname déjà installé dans $dest, téléchargement ignoré."
       continue
@@ -153,6 +163,7 @@ else
   source "$VENV_DIR/bin/activate"
 fi
 
+echo "mise à niveau de numpy"
 pip install "numpy<2.0" --force-reinstall --no-cache-dir
 
 # Installation des pilotes NVIDIA + CUDA pour PyTorch GPU

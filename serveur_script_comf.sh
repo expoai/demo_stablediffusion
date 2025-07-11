@@ -113,6 +113,7 @@ download_if_enabled "VAE" "vae"
 download_if_enabled "lora" "loras"
 download_if_enabled "difmodel" "diffusion_models"
 download_if_enabled "textencoder" "text_encoders"
+download_if_enabled "clpvision" "clip_vision"
 
 # Extensions
 echo "Installation des extensions..."
@@ -133,7 +134,7 @@ while IFS=$'\t' read -r name url; do
   jq -r --arg name "$name" '.extensions[$name].models // {} | to_entries[] | select(.value.enabled == true) | [.key, .value.url] | @tsv' "$CONFIG_FILE" | \
   while IFS=$'\t' read -r subname suburl; do
     filename=$(basename "$suburl")
-    if [[ "$name"="=ComfyUI_IPAdapter_plus" ]]; then
+    if [[ "$name" == "ComfyUI_IPAdapter_plus" ]]; then
         extension=ipadapter
     else
         extension=controlnet
@@ -158,6 +159,7 @@ if [ ! -d "$VENV_DIR" ]; then
   source "$VENV_DIR/bin/activate"
   pip install --upgrade pip
   pip install -r requirements.txt
+  python3.10 -m pip install onnxruntime-gpu
 else
   echo "venv déjà présent, activation..."
   source "$VENV_DIR/bin/activate"

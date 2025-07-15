@@ -156,6 +156,7 @@ echo "Configuration de l'environnement virtuel..."
 if [ ! -d "$VENV_DIR" ]; then
   echo "Création du venv..."
   sudo python3.10 -m venv "$VENV_DIR"
+  sudo chown -R ubuntu:ubuntu /home/ubuntu/
   source "$VENV_DIR/bin/activate"
   pip install --upgrade pip
   pip install -r requirements.txt

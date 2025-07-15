@@ -155,7 +155,7 @@ done
 echo "Configuration de l'environnement virtuel..."
 if [ ! -d "$VENV_DIR" ]; then
   echo "Création du venv..."
-  python3.10 -m venv "$VENV_DIR"
+  sudo python3.10 -m venv "$VENV_DIR"
   source "$VENV_DIR/bin/activate"
   pip install --upgrade pip
   pip install -r requirements.txt
@@ -179,7 +179,7 @@ if lspci | grep -i nvidia > /dev/null; then
     safe_apt_install -y nvidia-driver-535
     echo "Vérification de la détection GPU après installation..."
     if ! nvidia-smi; then
-        echo "❌ Le driver NVIDIA semble ne pas être actif. Un redémarrage est requis."
+        echo "Le driver NVIDIA semble ne pas être actif. Un redémarrage est requis."
         sudo reboot
         exit 0
     fi

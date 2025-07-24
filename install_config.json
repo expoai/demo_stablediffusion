@@ -13,14 +13,6 @@
     "Flat2DMerge_fp16": {
       "enabled": true,
       "url": "https://civitai.green/api/download/models/266360?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-    },
-    "real-dream_sd15_fp16_checkpoint": {
-      "enabled": true,
-      "url": "https://civitai.green/api/download/models/712448?type=Model&format=SafeTensor&size=pruned&fp=fp16"
-    },
-    "flux1-dev-fp8" : {
-      "enabled": false,
-      "url" : "https://huggingface.co/Comfy-Org/flux1-dev/resolve/main/flux1-dev-fp8.safetensors?"
     }
   },
   "extensions": {
@@ -50,13 +42,9 @@
     }
   },
   "lora": {
-    "expressive": {
+    "Baroque_Fantasy_Realism": {
       "enabled": true,
-      "url": "https://huggingface.co/gokaygokay/Flux-Expressive-LoRA/resolve/main/expressive.safetensors"
-    },
-    "isometric-skeumorphic-3d-bnb": {
-      "enabled": true,
-      "url": "https://huggingface.co/multimodalart/isometric-skeumorphic-3d-bnb/resolve/main/isometric-skeumorphic-3d-bnb.safetensors"
+      "url": "https://civitai.com/api/download/models/1815935?type=Model&format=SafeTensor"
     },
     "ip-adapter-faceid-plusv2_sd15_lora": {
       "enabled": true,
@@ -64,22 +52,18 @@
     }
   },
   "VAE": {
-    "ae": {
-      "enabled" : false,
-      "url" : "https://huggingface.co/Comfy-Org/Lumina_Image_2.0_Repackaged/resolve/main/split_files/vae/ae.safetensors"
-    },
-    "model_28569": {
+    "Anime_v2": {
       "enabled" : true,
-      "url" : "https://civitai.green/api/download/models/28569?type=Model&format=SafeTensor"
+      "url" : "https://huggingface.co/XpucT/Anime/resolve/main/Anime_v2.safetensors"
     }
   },
   "textencoder": {
     "t5xxl_fp8_e4m3fn_scaled": {
-      "enabled" : true,
+      "enabled" : false,
       "url" : "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/t5xxl_fp8_e4m3fn_scaled.safetensors"
     },
     "clip_l": {
-      "enabled" : true,
+      "enabled" : false,
       "url" : "https://huggingface.co/comfyanonymous/flux_text_encoders/resolve/main/clip_l.safetensors"
     }
   },

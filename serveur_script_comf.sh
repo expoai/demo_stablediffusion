@@ -226,3 +226,7 @@ echo ""
 echo "ComfyUI est maintenant en cours d'exécution."
 IPV4=$(curl -s ipv4.icanhazip.com)
 echo "URL d'accès : http://$IPV4:$PORT"
+
+# Affichage des logs
+echo "Affichage des logs (CTRL+C pour quitter) :"
+tail -f comfyui.log

@@ -13,6 +13,10 @@
     "Flat2DMerge_fp16": {
       "enabled": true,
       "url": "https://civitai.green/api/download/models/266360?type=Model&format=SafeTensor&size=pruned&fp=fp16"
+    },
+    "novaCartoonXL_v10.safetensors": {
+      "enabled": true,
+      "url": "https://civitai.com/api/download/models/1777060?type=Model&format=SafeTensor&size=pruned&fp=fp16"
     }
   },
   "extensions": {
@@ -49,12 +53,24 @@
     "ip-adapter-faceid-plusv2_sd15_lora": {
       "enabled": true,
       "url": "https://huggingface.co/h94/IP-Adapter-FaceID/resolve/main/ip-adapter-faceid-plusv2_sd15_lora.safetensors"
+    },
+    "Noita_IL_v1.0": {
+      "enabled": true,
+      "url": "https://civitai.com/api/download/models/1960332?type=Model&format=SafeTensor"
+    },
+    "Cyberpunk_style-05": {
+      "enabled": true,
+      "url": "https://civitai.com/api/download/models/172658?type=Model&format=SafeTensor"
     }
   },
   "VAE": {
     "Anime2VAE": {
       "enabled" : true,
       "url" : "https://civitai.green/api/download/models/28569?type=Model&format=SafeTensor"
+    },
+    "sdxl_vae": {
+      "enabled" : true,
+      "url" : "https://huggingface.co/stabilityai/sdxl-vae/resolve/main/sdxl_vae.safetensors"
     }
   },
   "textencoder": {

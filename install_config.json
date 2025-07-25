@@ -52,9 +52,9 @@
     }
   },
   "VAE": {
-    "Anime_v2": {
+    "Anime2VAE": {
       "enabled" : true,
-      "url" : "https://huggingface.co/XpucT/Anime/resolve/main/Anime_v2.safetensors"
+      "url" : "https://civitai.green/api/download/models/28569?type=Model&format=SafeTensor"
     }
   },
   "textencoder": {
@@ -74,7 +74,7 @@
     }
   },
   "clpvision": {
-    "vit-h": {
+    "clip-h": {
       "enabled": true,
       "url": "https://huggingface.co/h94/IP-Adapter/resolve/main/models/image_encoder/model.safetensors"
     }
